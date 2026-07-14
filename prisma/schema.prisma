@@ -1,0 +1,560 @@
+// ============================================================================
+// builders.review — Prisma schema (MySQL 8+)
+// Migrated from Supabase PostgreSQL. See docs/SUPABASE-TO-MYSQL-MIGRATION.md.
+//
+// Conversion map:
+//   pg uuid       -> String @db.Char(36) @default(uuid())
+//   jsonb         -> Json (MySQL JSON)
+//   timestamptz   -> DateTime @db.DateTime(3) (UTC, ms precision)
+//   numeric       -> Decimal @db.Decimal(...)
+//   bytea         -> Bytes (encrypted secrets only; prefer env/secret manager)
+//   pg enums      -> Prisma enums
+//   RLS           -> enforced in application code (src/lib/auth + repositories)
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums (were PostgreSQL enum types)
+// ---------------------------------------------------------------------------
+enum ReviewStatus {
+  draft
+  pending_verification
+  pending_moderation
+  approved
+  rejected
+  flagged
+  removed
+}
+
+enum ExperienceType {
+  course
+  internship
+  program
+  mentorship
+  portfolio_service
+  career_support
+  community
+  website
+  other
+}
+
+enum IntegrationMode {
+  official_api
+  official_widget
+  partner_api
+  authorized_import
+  manual_summary
+  external_link_only
+  disabled
+}
+
+enum SourceGroup {
+  first_party
+  learner
+  employer
+}
+
+enum RatingType {
+  five_star
+  recommendation_pct
+  letter_grade
+}
+
+enum AdminRole {
+  moderator
+  admin
+}
+
+// ===========================================================================
+// Auth.js (NextAuth) models — required by @auth/prisma-adapter.
+// Replaces Supabase Auth. `users` is the identity table others link to.
+// ===========================================================================
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @db.DateTime(3)
+  image         String?   @db.Text
+  createdAt     DateTime  @default(now()) @db.DateTime(3)
+
+  accounts         Account[]
+  sessions         Session[]
+  reviewerProfile  ReviewerProfile?
+  adminUser        AdminUser?
+  moderationActs   ModerationAction[]
+  auditLogs        AuditLog[]
+  verifiedProfiles ExternalProfile[]
+  importBatches    ImportBatch[]
+  credentialEdits  SourceCredential[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime @db.DateTime(3)
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ===========================================================================
+// Review-platform tables
+// ===========================================================================
+model Program {
+  slug        String         @id
+  title       String
+  type        ExperienceType
+  officialUrl String?        @db.Text
+  summary     String         @db.Text
+  seoIntro    String         @db.Text
+  sortOrder   Int            @default(0)
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now()) @db.DateTime(3)
+
+  reviews Review[]
+
+  @@map("programs")
+}
+
+model ReviewCategory {
+  key         String  @id
+  label       String
+  description String  @db.Text
+  sortOrder   Int     @default(0)
+  active      Boolean @default(true)
+
+  categoryRatings CategoryRating[]
+
+  @@map("review_categories")
+}
+
+model ReviewerProfile {
+  id          String   @id @default(uuid()) @db.Char(36)
+  userId      String?  @unique
+  displayName String
+  emailHash   String   @unique
+  createdAt   DateTime @default(now()) @db.DateTime(3)
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reviews Review[]
+
+  @@map("reviewer_profiles")
+}
+
+model Review {
+  id                  String         @id @default(uuid()) @db.Char(36)
+  slug                String         @unique
+  experienceType      ExperienceType
+  programSlug         String?
+  // Non-null normalized scope so the duplicate-prevention unique index still
+  // works when programSlug is NULL (MySQL treats NULLs as distinct otherwise).
+  programScope        String         @default("")
+  title               String
+  body                String         @db.Text
+  overallRating       Int
+  categoryRatings     Json           @default("[]")
+  pros                Json           @default("[]")
+  improvements        Json           @default("[]")
+  outcome             String?        @db.Text
+  wouldRecommend      Boolean?
+  reviewerDisplayName String
+  reviewerEmailHash   String
+  reviewerId          String?
+  relationship        String         @default("student")
+  batch               String?
+  experienceDate      DateTime       @db.Date
+  verified            Boolean        @default(false)
+  status              ReviewStatus   @default(pending_verification)
+  helpfulCount        Int            @default(0)
+  reportCount         Int            @default(0)
+  spamFlags           Json           @default("[]")
+  isSample            Boolean        @default(false)
+  submittedAt         DateTime       @default(now()) @db.DateTime(3)
+  verifiedAt          DateTime?      @db.DateTime(3)
+  publishedAt         DateTime?      @db.DateTime(3)
+  lastEditedAt        DateTime?      @db.DateTime(3)
+  moderatedAt         DateTime?      @db.DateTime(3)
+  removedAt           DateTime?      @db.DateTime(3)
+
+  program         Program?             @relation(fields: [programSlug], references: [slug], onDelete: SetNull)
+  reviewer        ReviewerProfile?     @relation(fields: [reviewerId], references: [id], onDelete: SetNull)
+  categoryScores  CategoryRating[]
+  verifications   VerificationRecord[]
+  companyResponse CompanyResponse?
+  helpfulVotes    HelpfulVote[]
+  reports         ReviewReport[]
+  moderations     ModerationAction[]
+  attachments     ReviewAttachment[]
+
+  // Duplicate prevention: one review per email per experience per program.
+  @@unique([reviewerEmailHash, experienceType, programScope], name: "uniq_review_dedupe")
+  @@index([status, publishedAt])
+  @@index([programSlug, status])
+  @@index([experienceType, status])
+  @@map("reviews")
+}
+
+model CategoryRating {
+  id          String @id @default(uuid()) @db.Char(36)
+  reviewId    String
+  categoryKey String
+  value       Int
+
+  review   Review         @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  category ReviewCategory @relation(fields: [categoryKey], references: [key], onDelete: Cascade)
+
+  @@unique([reviewId, categoryKey])
+  @@index([categoryKey])
+  @@map("category_ratings")
+}
+
+model VerificationRecord {
+  id         String    @id @default(uuid()) @db.Char(36)
+  reviewId   String
+  method     String    @default("email")
+  tokenHash  String?
+  verified   Boolean   @default(false)
+  createdAt  DateTime  @default(now()) @db.DateTime(3)
+  verifiedAt DateTime? @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("verification_records")
+}
+
+model CompanyResponse {
+  id          String   @id @default(uuid()) @db.Char(36)
+  reviewId    String   @unique
+  authorName  String   @default("Portfolio Builders")
+  body        String   @db.Text
+  respondedAt DateTime @default(now()) @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("company_responses")
+}
+
+model HelpfulVote {
+  id        String   @id @default(uuid()) @db.Char(36)
+  reviewId  String
+  voterHash String
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, voterHash])
+  @@map("helpful_votes")
+}
+
+model ReviewReport {
+  id           String   @id @default(uuid()) @db.Char(36)
+  reviewId     String
+  reporterHash String   @default("")
+  reason       String
+  details      String   @db.Text
+  status       String   @default("open")
+  createdAt    DateTime @default(now()) @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  // One report per reporter fingerprint per review (soft abuse control).
+  @@unique([reviewId, reporterHash])
+  @@index([status])
+  @@map("review_reports")
+}
+
+model ModerationAction {
+  id        String   @id @default(uuid()) @db.Char(36)
+  reviewId  String
+  actorId   String?
+  action    String
+  reason    String?  @db.Text
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  actor  User?  @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([reviewId])
+  @@map("moderation_actions")
+}
+
+model ReviewAttachment {
+  id          String   @id @default(uuid()) @db.Char(36)
+  reviewId    String
+  // METADATA ONLY. Files live in S3/Cloudinary/Vercel Blob (optional provider).
+  storagePath String   @db.Text
+  mimeType    String
+  sizeBytes   Int
+  createdAt   DateTime @default(now()) @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("review_attachments")
+}
+
+// ===========================================================================
+// External review-source tables
+// ===========================================================================
+model ReviewSource {
+  slug                     String          @id
+  name                     String
+  sourceGroup              SourceGroup
+  ratingType               RatingType      @default(five_star)
+  officialUrl              String?         @db.Text
+  defaultMin               Decimal         @default(1) @db.Decimal(6, 2)
+  defaultMax               Decimal         @default(5) @db.Decimal(6, 2)
+  integrationMode          IntegrationMode @default(disabled)
+  countsTowardLearnerScore Boolean         @default(false)
+  attributionRequirements  String?         @db.Text
+  complianceNotes          String?         @db.Text
+  syncEnabled              Boolean         @default(false)
+  active                   Boolean         @default(true)
+  updatedAt                DateTime        @default(now()) @updatedAt @db.DateTime(3)
+
+  profiles        ExternalProfile[]
+  externalReviews ExternalReview[]
+  syncJobs        SyncJob[]
+  importBatches   ImportBatch[]
+  credential      SourceCredential?
+
+  @@map("review_sources")
+}
+
+model ExternalProfile {
+  id                    String          @id @default(uuid()) @db.Char(36)
+  sourceSlug            String
+  externalProfileId     String?
+  externalProfileUrl    String          @db.Text
+  externalBusinessName  String          @default("Portfolio Builders")
+  integrationMode       IntegrationMode @default(external_link_only)
+  verificationStatus    String          @default("unverified")
+  verifiedById          String?
+  verifiedAt            DateTime?       @db.DateTime(3)
+  apiConnectionStatus   String          @default("n/a")
+  lastSyncAt            DateTime?       @db.DateTime(3)
+  lastVerifiedAt        DateTime?       @db.DateTime(3)
+  nextSyncAllowedAt     DateTime?       @db.DateTime(3)
+  externalOverallRating Decimal?        @db.Decimal(4, 2)
+  externalReviewCount   Int?
+  recommendationPct     Decimal?        @db.Decimal(5, 2)
+  letterGrade           String?
+  active                Boolean         @default(true)
+  isSample              Boolean         @default(false)
+  createdAt             DateTime        @default(now()) @db.DateTime(3)
+
+  source          ReviewSource     @relation(fields: [sourceSlug], references: [slug], onDelete: Cascade)
+  verifiedBy      User?            @relation(fields: [verifiedById], references: [id], onDelete: SetNull)
+  externalReviews ExternalReview[]
+  syncJobs        SyncJob[]
+
+  @@unique([sourceSlug, externalProfileId])
+  @@index([active, verificationStatus])
+  @@map("external_profiles")
+}
+
+model ExternalReview {
+  id                  String          @id @default(uuid()) @db.Char(36)
+  sourceSlug          String
+  externalProfileId   String
+  externalReviewId    String?
+  originalReviewUrl   String?         @db.Text
+  authorDisplayName   String
+  authorPhotoUrl      String?         @db.Text
+  title               String?
+  body                String          @db.Text
+  isExcerpt           Boolean         @default(false)
+  originalRating      Decimal         @db.Decimal(6, 2)
+  originalScaleMin    Decimal         @db.Decimal(6, 2)
+  originalScaleMax    Decimal         @db.Decimal(6, 2)
+  originalRatingLabel String
+  normalizedRating    Decimal?        @db.Decimal(4, 2)
+  sourceGroup         SourceGroup
+  publishedDate       DateTime?       @db.DateTime(3)
+  importedDate        DateTime        @default(now()) @db.DateTime(3)
+  lastSyncedDate      DateTime?       @db.DateTime(3)
+  verification        String          @default("unverified")
+  attribution         String          @db.Text
+  language            String?
+  companyResponse     String?         @db.Text
+  importMethod        IntegrationMode @default(manual_summary)
+  contentHash         String
+  visibility          String          @default("visible")
+  removed             Boolean         @default(false)
+  isSample            Boolean         @default(false)
+
+  source  ReviewSource    @relation(fields: [sourceSlug], references: [slug], onDelete: Cascade)
+  profile ExternalProfile @relation(fields: [externalProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceSlug, externalProfileId, externalReviewId])
+  @@unique([sourceSlug, externalProfileId, contentHash])
+  @@index([sourceSlug, visibility, removed])
+  @@index([externalProfileId])
+  @@map("external_reviews")
+}
+
+model SyncJob {
+  id                String    @id @default(uuid()) @db.Char(36)
+  sourceSlug        String
+  externalProfileId String?
+  jobType           String    @default("scheduled")
+  startedAt         DateTime  @default(now()) @db.DateTime(3)
+  endedAt           DateTime? @db.DateTime(3)
+  status            String    @default("queued")
+  fetched           Int       @default(0)
+  created           Int       @default(0)
+  updated           Int       @default(0)
+  skipped           Int       @default(0)
+  errorSummary      String?   @db.Text
+  retryCount        Int       @default(0)
+
+  source  ReviewSource     @relation(fields: [sourceSlug], references: [slug], onDelete: Cascade)
+  profile ExternalProfile? @relation(fields: [externalProfileId], references: [id], onDelete: Cascade)
+
+  @@index([sourceSlug, startedAt])
+  @@map("sync_jobs")
+}
+
+model ImportBatch {
+  id         String   @id @default(uuid()) @db.Char(36)
+  sourceSlug String
+  format     String   @default("csv")
+  adminId    String?
+  status     String   @default("preview")
+  totals     Json     @default("{}")
+  createdAt  DateTime @default(now()) @db.DateTime(3)
+
+  source ReviewSource @relation(fields: [sourceSlug], references: [slug], onDelete: Cascade)
+  admin  User?        @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([sourceSlug])
+  @@map("import_batches")
+}
+
+// Prefer env vars / a secret manager. If used, store only a reference or an
+// encrypted blob — NEVER a plaintext secret. Never selected by public repos.
+model SourceCredential {
+  sourceSlug      String   @id
+  credentialRef   String?
+  encryptedSecret Bytes?
+  updatedById     String?
+  updatedAt       DateTime @default(now()) @updatedAt @db.DateTime(3)
+
+  source    ReviewSource @relation(fields: [sourceSlug], references: [slug], onDelete: Cascade)
+  updatedBy User?        @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("source_credentials")
+}
+
+// ===========================================================================
+// Administration & website tables
+// ===========================================================================
+model AdminUser {
+  userId    String    @id
+  role      AdminRole @default(moderator)
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Char(36)
+  actorId   String?
+  action    String
+  targetId  String?
+  detail    String?  @db.Text
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid()) @db.Char(36)
+  name      String
+  email     String
+  topic     String
+  message   String   @db.Text
+  createdAt DateTime @default(now()) @db.DateTime(3)
+
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model SiteSetting {
+  key   String @id
+  value Json
+
+  @@map("site_settings")
+}
+
+model SeoSetting {
+  path        String  @id
+  title       String?
+  description String? @db.Text
+  ogImage     String? @db.Text
+  noindex     Boolean @default(false)
+
+  @@map("seo_settings")
+}
+
+model AeoQuestion {
+  id        String   @id @default(uuid()) @db.Char(36)
+  question  String   @db.Text
+  answer    String   @db.Text
+  pagePath  String   @default("/")
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  updatedAt DateTime @default(now()) @updatedAt @db.DateTime(3)
+
+  @@index([pagePath, active])
+  @@map("aeo_questions")
+}

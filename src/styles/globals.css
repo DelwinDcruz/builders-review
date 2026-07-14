@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   builders.review — DESIGN SYSTEM
+   Light-first, energetic education & career aesthetic.
+
+   ⚠ BRAND TOKENS ARE UNVERIFIED PLACEHOLDERS.
+   The official Portfolio Builders stylesheet could not be read (the CSS path
+   404s and no browser was available to read computed styles), so the exact
+   brand hex values and font families are NOT known. Rather than invent them,
+   `--brand-*` and `--font-*` below are neutral, clearly-marked placeholders.
+   See docs/BRAND-TOKENS.md for the exact 3-step procedure to fill them in.
+   Change branding HERE ONLY — never hardcode a colour in a component.
+   ========================================================================== */
+
+:root {
+  
+  /* --- Brand (PLACEHOLDER — replace with verified Portfolio Builders hex) --- */
+  --brand: 17 45 78;            /* deep navy   — PLACEHOLDER */
+  --brand-hover: 12 34 60;      /* PLACEHOLDER */
+  --brand-fg: 255 255 255;
+  --brand-soft: 234 240 248;    /* PLACEHOLDER tint */
+  --accent: 217 119 6;          /* warm amber (also the star colour) — PLACEHOLDER */
+  --accent-fg: 26 16 3;
+
+  /* --- Neutral scale --- */
+  --n-50: 250 250 249; --n-100: 245 245 244; --n-200: 231 229 228;
+  --n-300: 214 211 209; --n-400: 168 162 158; --n-500: 120 113 108;
+  --n-600: 87 83 78;   --n-700: 68 64 60;    --n-800: 41 37 36;
+  --n-900: 24 24 27;   --n-950: 12 12 14;
+
+  /* --- Surfaces --- */
+  --bg: 252 252 251;
+  --bg-alt: 246 246 244;        /* soft tinted band */
+  --bg-brand-soft: 240 245 251; /* brand-tinted band */
+  --surface: 255 255 255;
+  --surface-2: 247 247 245;
+  --border: 230 228 226;
+  --border-strong: 209 206 203;
+
+  /* --- Text hierarchy --- */
+  --fg: 22 26 33;
+  --fg-secondary: 68 74 86;
+  --muted: 100 105 116;         /* AA on --bg */
+  --fg-inverse: 255 255 255;
+
+  /* --- Status --- */
+  --star: 217 119 6;            /* gold/amber — AA on white */
+  --star-soft: 254 243 199;
+  --success: 21 128 61;         /* green verified */
+  --warning: 180 83 9;
+  --error: 190 24 36;
+  --info: 29 78 216;
+
+  /* --- Radius (friendly, rounded) --- */
+  --r-sm: .5rem; --r-md: .75rem; --r-lg: 1rem; --r-xl: 1.25rem;
+  --r-2xl: 1.5rem; --r-3xl: 2rem; --r-full: 9999px;
+
+  /* --- Shadows --- */
+  --sh-xs: 0 1px 2px rgb(22 26 33 / .04);
+  --sh-sm: 0 1px 3px rgb(22 26 33 / .06), 0 1px 2px rgb(22 26 33 / .04);
+  --sh-md: 0 4px 8px -2px rgb(22 26 33 / .06), 0 2px 4px -2px rgb(22 26 33 / .05);
+  --sh-lg: 0 14px 28px -10px rgb(22 26 33 / .12), 0 4px 10px -4px rgb(22 26 33 / .06);
+  --sh-xl: 0 28px 56px -20px rgb(22 26 33 / .18), 0 8px 18px -10px rgb(22 26 33 / .08);
+  --sh-glow: 0 0 0 1px rgb(var(--brand) / .10), 0 18px 40px -14px rgb(var(--brand) / .30);
+
+  /* --- Motion --- */
+  --ease: cubic-bezier(.22,1,.36,1);
+  --dur-fast: 140ms; --dur: 220ms; --dur-slow: 380ms;
+
+  /* --- Type (PLACEHOLDER families — official direction unconfirmed) --- */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+}
+:root {
+  --brand: 0 0 0;
+  --brand-hover: 0 0 0;
+  --brand-fg: 255 255 255;
+  --brand-soft: 245 245 245;
+
+  --accent: 0 0 0;
+  --accent-fg: 255 255 255;
+
+  --bg-brand-soft: 250 250 250;
+}
+
+.dark {
+  --bg: 14 15 18;
+  --bg-alt: 20 22 26;
+  --bg-brand-soft: 19 25 36;
+  --surface: 24 26 31;
+  --surface-2: 32 35 41;
+  --border: 48 52 60;
+  --border-strong: 68 73 84;
+
+  --fg: 244 244 245;
+  --fg-secondary: 200 204 212;
+  --muted: 158 164 176;
+  --fg-inverse: 22 26 33;
+
+  --brand: 138 175 226;
+  --brand-hover: 165 195 235;
+  --brand-fg: 12 18 28;
+  --brand-soft: 28 38 54;
+
+  --accent: 251 191 36;
+  --accent-fg: 26 16 3;
+  --star: 251 191 36;
+  --star-soft: 66 50 12;
+  --success: 52 199 123;
+  --warning: 251 191 36;
+  --error: 248 113 113;
+  --info: 96 165 250;
+
+  --sh-sm: 0 1px 3px rgb(0 0 0 / .5);
+  --sh-md: 0 4px 8px -2px rgb(0 0 0 / .5);
+  --sh-lg: 0 14px 30px -12px rgb(0 0 0 / .6);
+  --sh-xl: 0 28px 60px -20px rgb(0 0 0 / .7);
+  --sh-glow: 0 0 0 1px rgb(var(--brand) / .25), 0 18px 44px -16px rgb(var(--brand) / .35);
+}
+
+* { border-color: rgb(var(--border)); }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: clip; }
+
+body {
+  overflow-x: clip;
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}
+
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible {
+  outline: 2px solid rgb(var(--brand)); outline-offset: 2px; border-radius: var(--r-sm);
+}
+
+.skip-link {
+  position: absolute; left: 1rem; top: -4rem; z-index: 100;
+  background: rgb(var(--brand)); color: rgb(var(--brand-fg));
+  padding: .75rem 1.25rem; border-radius: 0 0 var(--r-md) var(--r-md);
+  font-weight: 600; transition: top var(--dur) var(--ease);
+}
+.skip-link:focus { top: 0; }
+
+@layer components {
+  .container-app { @apply mx-auto w-full max-w-[80rem] px-5 sm:px-6 lg:px-8; }
+  .bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .bleed-inner { @apply mx-auto w-full max-w-[80rem] px-5 sm:px-6 lg:px-8; }
+
+  .card {
+    background: rgb(var(--surface));
+    border: 1px solid rgb(var(--border));
+    border-radius: var(--r-xl);
+    box-shadow: var(--sh-sm);
+  }
+  .card-lift { transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+  .card-lift:hover { transform: translateY(-3px); box-shadow: var(--sh-lg); border-color: rgb(var(--border-strong)); }
+
+  .band { background: rgb(var(--bg-alt)); }
+  .band-brand { background: rgb(var(--bg-brand-soft)); }
+
+  .grad-text {
+    background-image: linear-gradient(100deg, rgb(var(--brand)), rgb(var(--accent)));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .mesh {
+    background:
+      radial-gradient(56rem 30rem at 8% -10%, rgb(var(--brand) / .10), transparent 60%),
+      radial-gradient(44rem 26rem at 96% 0%, rgb(var(--accent) / .12), transparent 62%);
+  }
+  .dot-grid {
+    background-image: radial-gradient(rgb(var(--fg) / .06) 1px, transparent 1px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(70% 60% at 50% 40%, #000 55%, transparent 100%);
+  }
+
+  .prose-page { @apply max-w-3xl text-[1.0625rem] leading-[1.75] text-fg-secondary; }
+  .prose-page h2 { @apply mb-3 mt-12 text-[1.75rem] font-bold leading-tight text-fg sm:text-[2rem]; }
+  .prose-page h3 { @apply mb-2 mt-8 text-xl font-semibold text-fg; }
+  .prose-page p { @apply mb-5; }
+  .prose-page ul { @apply mb-5 list-disc space-y-1.5 pl-6; }
+  .prose-page a { @apply font-medium text-brand underline underline-offset-4; }
+  .prose-page strong { @apply text-fg; }
+
+  /* Escape hatch: components rendered inside .prose-page keep their own styles. */
+  .prose-page .not-prose h2, .prose-page .not-prose h3 { @apply m-0 text-inherit; }
+  .prose-page .not-prose p { @apply m-0; }
+  .prose-page .not-prose a { @apply no-underline; }
+}
+
+/* Reveal — content visible without JS; only `html.js` hides then reveals. */
+.reveal { opacity: 1; transform: none; }
+html.js .reveal { opacity: 0; transform: translateY(14px); transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease); }
+html.js .reveal.is-in { opacity: 1; transform: none; }
+
+.skeleton {
+  background: linear-gradient(90deg, rgb(var(--surface-2)) 25%, rgb(var(--border)) 37%, rgb(var(--surface-2)) 63%);
+  background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: var(--r-md);
+}
+@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
+@keyframes float-slow { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+.float-slow { animation: float-slow 7s var(--ease) infinite; }

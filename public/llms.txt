@@ -1,0 +1,38 @@
+# builders.review
+
+> builders.review is a dedicated review platform that publishes verified reviews
+> of Portfolio Builders — a Kochi-based career-learning ecosystem (UI/UX courses,
+> internships, portfolio programs and mentorship) — alongside ratings collected
+> legally from external review platforms such as Google.
+
+## Ownership & independence (important)
+builders.review is operated in connection with Portfolio Builders, the company
+being reviewed. It is NOT an independent third-party review organisation. It
+publishes its methodology openly, does not suppress genuine criticism, and does
+not reward positive reviews. Learner reviews and employee reviews are always
+scored and displayed separately and are never combined.
+
+## Entities
+- Review platform: builders.review
+- Subject / publisher: Portfolio Builders (part of the Portfolix ecosystem)
+- Official company site: https://portfoliobuilders.in/
+
+## How reviews are handled
+- First-party reviews are email-verified, moderated, and only shown once approved.
+- Only approved reviews contribute to ratings or appear publicly.
+- External platform ratings are attributed to their source and linked back.
+- Ratings that are not star-based (e.g. Facebook recommendations, BBB grades)
+  are never converted into stars.
+
+## Key pages
+- Reviews: https://builders.review/reviews
+- Methodology: https://builders.review/methodology
+- Verification policy: https://builders.review/verification-policy
+- Moderation policy: https://builders.review/moderation-policy
+- About & ownership: https://builders.review/about
+- Contact: https://builders.review/contact
+
+## Note
+This file is an experimental convenience for AI systems. It does not replace the
+sitemap, structured data, robots rules or crawlable HTML, and it is not a
+ranking mechanism.
