@@ -74,7 +74,12 @@ export default async function AdminSources() {
           <strong>Limits, enforced in the UI:</strong> {gdef.integration.complianceNotes} Attribution: {gdef.integration.attribution}
         </p>
 
-        <SourceActions sourceSlug="google" profile={google?.profile} />
+        {/* <SourceActions sourceSlug="google" profile={google?.profile} /> */}
+        <SourceActions
+  sourceSlug="google"
+  profile={google?.profile}
+  enabled={(google?.status ?? "disabled") !== "disabled"}
+/>
       </section>
 
       {/* All sources */}
@@ -104,7 +109,12 @@ export default async function AdminSources() {
                     </div>
                     <Badge tone={s.connected ? "success" : s.status === "disabled" ? "neutral" : "warning"}>{STATUS_LABELS[s.status]}</Badge>
                   </div>
-                  <SourceActions sourceSlug={s.def.slug} profile={s.profile} />
+                  {/* <SourceActions sourceSlug={s.def.slug} profile={s.profile} /> */}
+                  <SourceActions
+  sourceSlug={s.def.slug}
+  profile={s.profile}
+  enabled={(s.status ?? "disabled") !== "disabled"}
+/>
                 </div>
               ))}
             </div>
