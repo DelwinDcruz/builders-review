@@ -52,9 +52,19 @@ export default async function ReviewPlatformsPage() {
 
       <div className="mb-12"><AnswerBlock question="Which platforms contain Portfolio Builders reviews?" answer={answer} updated={updated} /></div>
 
-      <Group title={GROUP_LABELS.learner} blurb="These measure what customers and students experienced. Star-compatible ones feed the combined learner score, weighted by review count." items={learner} />
-      <Group title={GROUP_LABELS.employer} blurb="These measure what it is like to WORK at Portfolio Builders. They are never merged into student or learner ratings." items={employer} />
-    </>
+    <Group
+  title={GROUP_LABELS.learner ?? "Learner Reviews"}
+  blurb="These measure what customers and students experienced. Star-compatible ones feed the combined learner score, weighted by review count."
+  items={learner}
+/>
+
+<Group
+  title={GROUP_LABELS.employer ?? "Employer Reviews"}
+  blurb="These measure what it is like to WORK at Portfolio Builders. They are never merged into student or learner ratings."
+  items={employer}
+/>
+
+   </>
   );
 }
 
