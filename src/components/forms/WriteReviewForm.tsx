@@ -131,11 +131,18 @@ export function WriteReviewForm({ programs, categories, initial }: Props) {
     return (
       <div className="mx-auto max-w-xl text-center">
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10 text-success"><CheckCircle2 size={32} /></div>
-        <h1 className="font-display text-h3 font-extrabold tracking-tight">Thank you — your review was submitted</h1>
+        {/* <h1 className="font-display text-h3 font-extrabold tracking-tight">Thank you — your review was submitted</h1> */}
+        <h1 className="font-display text-h3 font-extrabold tracking-tight">
+  Thank you — your comment is now published
+</h1>
         <div className="card mt-6 p-7 text-left text-body text-muted">
           <p className="flex items-start gap-2">
             <ShieldCheck size={18} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
-            <span><strong className="text-fg">What happens next:</strong> we've emailed you a verification link. Once you confirm it, a moderator checks your review against the guidelines before it is published. Reviews are never published automatically, and genuine criticism is never removed for being negative.</span>
+            {/* <span><strong className="text-fg">What happens next:</strong> we've emailed you a verification link. Once you confirm it, a moderator checks your review against the guidelines before it is published. Reviews are never published automatically, and genuine criticism is never removed for being negative.</span> */}
+            <span>
+  <strong className="text-fg">Published successfully:</strong> your comment
+  has been saved and is now visible on the reviews page.
+</span>
           </p>
           <p className="mt-3">Read our <Link href="/moderation-policy" className="font-semibold text-brand hover:underline">moderation policy</Link> and <Link href="/review-guidelines" className="font-semibold text-brand hover:underline">review guidelines</Link>.</p>
         </div>

@@ -17,9 +17,18 @@ export const fingerprint = (...parts: (string | null | undefined)[]) =>
 const isUniqueViolation = (e: unknown) =>
   e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
 
+// export interface SubmitResult {
+//   ok: true; id: string; slug: string;
+//   status: "pending_verification"; spamFlags: string[]; requiresEmailVerification: true;
+// }
+
 export interface SubmitResult {
-  ok: true; id: string; slug: string;
-  status: "pending_verification"; spamFlags: string[]; requiresEmailVerification: true;
+  ok: true;
+  id: string;
+  slug: string;
+  status: "approved";
+  spamFlags: string[];
+  requiresEmailVerification: false;
 }
 
 /** Persist as PENDING VERIFICATION. A review is never auto-published. */
@@ -68,10 +77,16 @@ export async function submitReview(input: ReviewSubmission): Promise<SubmitResul
             relationship: clean.relationship,
             batch: clean.batch || null,
             experienceDate: new Date(clean.experienceDate),
+            // verified: false,
+            // status: "pending_verification",
+            // spamFlags: spam.flags as unknown as Prisma.InputJsonValue,
+            // isSample: false,
             verified: false,
-            status: "pending_verification",
-            spamFlags: spam.flags as unknown as Prisma.InputJsonValue,
-            isSample: false,
+status: "approved",
+publishedAt: new Date(),
+moderatedAt: new Date(),
+spamFlags: spam.flags as unknown as Prisma.InputJsonValue,
+isSample: false,
           },
         });
         if (clean.categoryRatings.length) {
@@ -80,7 +95,7 @@ export async function submitReview(input: ReviewSubmission): Promise<SubmitResul
             skipDuplicates: true,
           });
         }
-        await tx.verificationRecord.create({ data: { reviewId: id, method: "email", verified: false } });
+        // await tx.verificationRecord.create({ data: { reviewId: id, method: "email", verified: false } });
       });
     } catch (e) {
       if (isUniqueViolation(e)) throw new Error("duplicate");
@@ -89,7 +104,16 @@ export async function submitReview(input: ReviewSubmission): Promise<SubmitResul
   } else {
     console.info("[submitReview:sample] accepted", { slug, spamFlags: spam.flags });
   }
-  return { ok: true, id, slug, status: "pending_verification", spamFlags: spam.flags, requiresEmailVerification: true };
+  // return { ok: true, id, slug, status: "pending_verification", spamFlags: spam.flags, requiresEmailVerification: true };
+
+  return {
+  ok: true,
+  id,
+  slug,
+  status: "approved",
+  spamFlags: spam.flags,
+  requiresEmailVerification: false,
+};
 }
 
 /**
