@@ -46,7 +46,15 @@ export default async function AdminSources() {
         </div>
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-meta-lg">
-          <Field label="Integration mode" value={SOURCE_LABEL[google?.profile?.integrationMode ?? gdef.defaultMode]} />
+          {/* <Field label="Integration mode" value={SOURCE_LABEL[google?.profile?.integrationMode ?? gdef.defaultMode]} /> */}
+          <Field
+  label="Integration mode"
+  value={
+    SOURCE_LABEL[
+      google?.profile?.integrationMode ?? gdef.defaultMode
+    ] ?? "Unknown"
+  }
+/>
           <Field label="Connection status" value={STATUS_LABELS[google?.status ?? "disabled"]} />
           <Field label="External profile ID (Place ID)" value={google?.profile?.externalProfileId ?? "—"} mono />
           <Field label="Last synchronized" value={google?.profile?.lastSyncAt ? formatDate(google.profile.lastSyncAt) : "Never"} />
