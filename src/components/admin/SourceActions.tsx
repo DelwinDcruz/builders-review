@@ -235,10 +235,14 @@ export function SourceActions({
           disabled={pending || !profile}
           onClick={() =>
             profile &&
-            run(() => testConnection(profile), {
-              captureHealth: true,
-              refresh: true,
-            })
+            // run(() => testConnection(profile), {
+            //   captureHealth: true,
+            //   refresh: true,
+            // })
+            run(() => testConnection(sourceSlug), {
+  captureHealth: true,
+  refresh: true,
+})
           }
           className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-meta-lg hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
