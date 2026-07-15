@@ -36,11 +36,30 @@ const hash = (s: string) => crypto.createHash("sha256").update(s).digest("hex").
 const apiKey = () => process.env.GOOGLE_MAPS_API_KEY ?? "";
 
 export class GooglePlacesConnector extends BaseConnector {
-  validateConfig(profile: ExternalProfile) {
-    if (!apiKey()) return { ok: false, error: "GOOGLE_MAPS_API_KEY is not set (server-only env var)." };
-    if (!profile.externalProfileId) return { ok: false, error: "No Google Place ID stored on this profile." };
-    return { ok: true };
+  // validateConfig(profile: ExternalProfile) {
+  //   if (!apiKey()) return { ok: false, error: "GOOGLE_MAPS_API_KEY is not set (server-only env var)." };
+  //   if (!profile.externalProfileId) return { ok: false, error: "No Google Place ID stored on this profile." };
+  //   return { ok: true };
+  // }
+  override validateConfig(
+  profile?: ExternalProfile
+): { ok: boolean; error?: string } {
+  if (!apiKey()) {
+    return {
+      ok: false,
+      error: "GOOGLE_MAPS_API_KEY is not set (server-only env var).",
+    };
   }
+
+  if (!profile?.externalProfileId) {
+    return {
+      ok: false,
+      error: "No Google Place ID stored on this profile.",
+    };
+  }
+
+  return { ok: true };
+}
 
   private async call(placeId: string): Promise<GoogleDetails> {
     const url = new URL(ENDPOINT);
