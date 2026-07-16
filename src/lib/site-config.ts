@@ -70,4 +70,5 @@ export const COMPANY = {
 // export const USE_SAMPLE_DATA = (process.env.NEXT_PUBLIC_USE_SAMPLE_DATA ?? "true") !== "false";
 
 export const USE_SAMPLE_DATA =
-  process.env.NEXT_PUBLIC_USE_SAMPLE_DATA === "true";
+  // process.env.NEXT_PUBLIC_USE_SAMPLE_DATA === "true";
+  (process.env.NEXT_PUBLIC_USE_SAMPLE_DATA ?? "true") !== "false";
