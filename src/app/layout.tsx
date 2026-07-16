@@ -8,6 +8,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { themeInitScript } from "@/components/layout/theme";
 import { publisherJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/seo/serialize";
+import Script from "next/script";
 
 
 /*
@@ -40,20 +41,72 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// export default function RootLayout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <html lang="en-IN" suppressHydrationWarning>
+//       <head>
+        
+//         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(publisherJsonLd()) }} />
+//         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd()) }} />
+//       </head>
+//       <body className="min-h-dvh">
+//         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+//         <a href="#main" className="skip-link">Skip to main content</a>
+//         <ToastProvider>
+//           <SampleDataBanner />
+//           <Header />
+//           <main id="main" className="container-app py-10 md:py-14">{children}</main>
+//           <Footer />
+//         </ToastProvider>
+//       </body>
+//     </html>
+//   );
+// }
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(publisherJsonLd()) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd()) }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJsonLd(publisherJsonLd()),
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJsonLd(websiteJsonLd()),
+          }}
+        />
       </head>
+
       <body className="min-h-dvh">
-        <a href="#main" className="skip-link">Skip to main content</a>
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: themeInitScript,
+          }}
+        />
+
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
+
         <ToastProvider>
           <SampleDataBanner />
           <Header />
-          <main id="main" className="container-app py-10 md:py-14">{children}</main>
+
+          <main id="main" className="container-app py-10 md:py-14">
+            {children}
+          </main>
+
           <Footer />
         </ToastProvider>
       </body>
